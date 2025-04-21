@@ -1,7 +1,7 @@
 import express from "express";
 import sellerController from "../controllers/sellerController";
 import bookingController from "../controllers/bookingController";
-import exportBookingPdf from "../controllers/exportBookingPDF";
+import exportBookingPdf from "../controllers/exportBookingPdf";
 import exportBookingTxt from "../controllers/exportBookingTxt";
 import multer from "multer";
 
