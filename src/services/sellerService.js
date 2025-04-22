@@ -5,7 +5,7 @@ let createSeller = async (data, file) => {
   return new Promise(async (resolve, reject) => {
     try {
       // Kiểm tra các trường cần thiết
-      if (!data.fullName || !data.phoneNumber) {
+      if (!data.fullName || !data.phoneNumber || !data.email || !file) {
         resolve({
           errCode: 1,
           errMessage: "Missing required fields",
@@ -13,11 +13,10 @@ let createSeller = async (data, file) => {
         return;
       }
 
-      // Nếu có file ảnh QR code, upload
       let qrCodeUrl = null;
       if (file) {
         try {
-          qrCodeUrl = await uploadImage(file); // Hàm upload ảnh giống như bên Product
+          qrCodeUrl = await uploadImage(file);
         } catch (error) {
           console.error("Lỗi upload QR:", error);
           resolve({
@@ -32,7 +31,7 @@ let createSeller = async (data, file) => {
         fullName: data.fullName,
         phoneNumber: data.phoneNumber,
         email: data.email || null,
-        qrCodeUrl: qrCodeUrl, // hoặc qrContent nếu bạn dùng nội dung QR
+        qrCodeUrl: qrCodeUrl,
       });
 
       resolve({
