@@ -4,7 +4,6 @@ import { uploadImage } from "./imageService";
 let createSeller = async (data, file) => {
   return new Promise(async (resolve, reject) => {
     try {
-      // Kiểm tra các trường cần thiết
       if (!data.fullName || !data.phoneNumber || !data.email || !file) {
         resolve({
           errCode: 1,
@@ -18,10 +17,10 @@ let createSeller = async (data, file) => {
         try {
           qrCodeUrl = await uploadImage(file);
         } catch (error) {
-          console.error("Lỗi upload QR:", error);
+          console.error("Error uploading QR:", error);
           resolve({
             errCode: 2,
-            errMessage: "Lỗi khi upload QR code",
+            errMessage: "Error uploading QR code",
           });
           return;
         }
@@ -36,7 +35,7 @@ let createSeller = async (data, file) => {
 
       resolve({
         errCode: 0,
-        errMessage: "Create seller successfully",
+        errMessage: "Seller created successfully",
       });
     } catch (e) {
       reject(e);
