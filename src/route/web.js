@@ -3,6 +3,7 @@ import sellerController from "../controllers/sellerController";
 import bookingController from "../controllers/bookingController";
 import exportBookingPdf from "../controllers/exportBookingPdf";
 import exportBookingTxt from "../controllers/exportBookingTxt";
+import dashboardController from "../controllers/dashboardController";
 import multer from "multer";
 
 let router = express.Router();
@@ -34,6 +35,9 @@ let initWebRoutes = (app) => {
   // Export API
   router.get("/api/bookings/:id/export", exportBookingPdf.exportBookingPdf);
   router.get("/api/bookings/:id/export-txt", exportBookingTxt.exportBookingTxt);
+
+  // Dashboard API
+  router.get("/api/get-dashboard", dashboardController.handleGetDashboard);
 
   return app.use("/", router);
 };
