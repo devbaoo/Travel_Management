@@ -10,7 +10,7 @@ const createSeller = async (data, file) => {
   try {
     const { fullName, phoneNumber, email, password } = data;
 
-    if (!fullName || !phoneNumber || !email || !password || !file) {
+    if (!fullName || !phoneNumber || !email || !password) {
       return {
         errCode: 1,
         errMessage: "Missing required fields",
