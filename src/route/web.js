@@ -4,6 +4,7 @@ import bookingController from "../controllers/bookingController";
 import exportBookingPdf from "../controllers/exportBookingPdf";
 import exportBookingTxt from "../controllers/exportBookingTxt";
 import dashboardController from "../controllers/dashboardController";
+import authController from "../controllers/authController";
 import multer from "multer";
 
 let router = express.Router();
@@ -38,6 +39,10 @@ let initWebRoutes = (app) => {
 
   // Dashboard API
   router.get("/api/get-dashboard", dashboardController.handleGetDashboard);
+
+  // Auth API
+  router.post("/api/register", authController.handleRegister);
+  router.post("/api/login", authController.handleLogin);
 
   return app.use("/", router);
 };
