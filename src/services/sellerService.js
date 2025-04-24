@@ -194,6 +194,55 @@ let updateSeller = async (id, data, file) => {
     }
   });
 };
+let changePassword = async (id, data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Kiem tra cac truong can thiet
+      if (!id || !data.oldPassword || !data.newPassword) {
+        resolve({
+          errCode: 1,
+          errMessage: "Missing required fields",
+        });
+        return;
+      }
+      // Tim seller hien tai
+      const existingSeller = await db.Seller.findByPk(id);
+      if (!existingSeller) {
+        resolve({
+          errCode: 2,
+          errMessage: "Seller not found",
+        });
+        return;
+      }
+      // Kiem tra mat khau cu
+      const isMatch = await bcrypt.compare(
+        data.oldPassword,
+        existingSeller.password
+      );
+      if (!isMatch) {
+        resolve({
+          errCode: 3,
+          errMessage: "Old password is incorrect",
+        });
+        return;
+      }
+      // Cap nhat mat khau moi
+      const hashedPassword = await bcrypt.hash(data.newPassword, SALT_ROUNDS);
+      await db.Seller.update(
+        {
+          password: hashedPassword,
+        },
+        { where: { id: id } }
+      );
+      resolve({
+        errCode: 0,
+        errMessage: "Update password successfully",
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
 
 export default {
   createSeller,
@@ -201,4 +250,5 @@ export default {
   getDetailSeller,
   deleteSeller,
   updateSeller,
+  changePassword,
 };
