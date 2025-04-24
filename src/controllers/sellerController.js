@@ -66,6 +66,20 @@ let updateSeller = async (req, res) => {
     });
   }
 };
+let changePassword = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = req.body;
+    let response = await sellerService.changePassword(id, data);
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({
+      errCode: -1,
+      message: "Internal Server Error",
+    });
+  }
+};
 
 export default {
   createSeller,
@@ -73,4 +87,5 @@ export default {
   getDetailSeller,
   deleteSeller,
   updateSeller,
+  changePassword,
 };

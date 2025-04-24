@@ -27,6 +27,8 @@ let initWebRoutes = (app) => {
     upload.single("qrCodeFile"),
     sellerController.updateSeller
   );
+  router.patch("/api/change-password/:id", sellerController.changePassword);
+
   // Booking API
   router.post("/api/create-booking", bookingController.createBooking);
   router.get("/api/get-all-bookings", bookingController.getAllBookings);
