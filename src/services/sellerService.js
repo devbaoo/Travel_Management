@@ -17,6 +17,7 @@ const createSeller = async (data, file) => {
       };
     }
 
+    // Kiểm tra trùng email
     const existingSeller = await db.Seller.findOne({ where: { email } });
     if (existingSeller) {
       return {
@@ -25,19 +26,24 @@ const createSeller = async (data, file) => {
       };
     }
 
-    let qrCodeUrl;
-    try {
-      qrCodeUrl = await uploadImage(file);
-    } catch (error) {
-      console.error("QR upload error:", error);
-      return {
-        errCode: 3,
-        errMessage: "Failed to upload QR code",
-      };
+    // Nếu có file thì upload, không thì để null
+    let qrCodeUrl = null;
+    if (file) {
+      try {
+        qrCodeUrl = await uploadImage(file);
+      } catch (error) {
+        console.error("QR upload error:", error);
+        return {
+          errCode: 3,
+          errMessage: "Failed to upload QR code",
+        };
+      }
     }
 
+    // Mã hóa password
     const hashedPassword = await hashPassword(password);
 
+    // Tạo mới seller
     const newSeller = await db.Seller.create({
       fullName,
       phoneNumber,
