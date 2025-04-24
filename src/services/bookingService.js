@@ -71,6 +71,30 @@ let deleteBooking = async (id) => {
     throw error;
   }
 };
+let getBookingBySeller = async (sellerId) => {
+  try {
+    if (!sellerId) {
+      return { errCode: 1, errMessage: "Missing sellerId" };
+    }
+
+    const bookings = await db.Booking.findAll({
+      where: { sellerId },
+      include: [
+        {
+          model: db.Seller,
+          as: "seller",
+          required: true,
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return { errCode: 0, data: bookings };
+  } catch (error) {
+    console.error("Get bookings by seller error:", error);
+    throw error;
+  }
+};
 
 module.exports = {
   createBooking,
@@ -78,4 +102,5 @@ module.exports = {
   getBookingById,
   updateBooking,
   deleteBooking,
+  getBookingBySeller,
 };

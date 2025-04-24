@@ -28,6 +28,11 @@ module.exports = (sequelize, DataTypes) => {
       qrCodeUrl: {
         type: DataTypes.STRING(255),
       },
+      role: {
+        type: DataTypes.ENUM("admin", "staff"), // hoặc: "admin", "staff", "manager"
+        allowNull: false,
+        defaultValue: "staff", // mặc định là nhân viên
+      },
     },
     {
       tableName: "Sellers",

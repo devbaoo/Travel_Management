@@ -8,7 +8,7 @@ const hashPassword = (password) => bcrypt.hash(password, SALT_ROUNDS);
 
 const createSeller = async (data, file) => {
   try {
-    const { fullName, phoneNumber, email, password } = data;
+    const { fullName, phoneNumber, email, password, role = "staff" } = data;
 
     if (!fullName || !phoneNumber || !email || !password) {
       return {
@@ -50,6 +50,7 @@ const createSeller = async (data, file) => {
       email,
       password: hashedPassword,
       qrCodeUrl,
+      role,
     });
 
     return {
@@ -61,6 +62,7 @@ const createSeller = async (data, file) => {
         email: newSeller.email,
         phoneNumber: newSeller.phoneNumber,
         qrCodeUrl: newSeller.qrCodeUrl,
+        role: newSeller.role,
       },
     };
   } catch (error) {

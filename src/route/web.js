@@ -35,6 +35,11 @@ let initWebRoutes = (app) => {
   router.get("/api/get-booking/:id", bookingController.getBookingById);
   router.put("/api/update-booking/:id", bookingController.updateBooking);
   router.delete("/api/delete-booking/:id", bookingController.deleteBooking);
+  router.get(
+    "/api/get-booking-by-seller/:sellerId",
+    bookingController.getBookingBySeller
+  );
+
   // Export API
   router.get("/api/bookings/:id/export", exportBookingPdf.exportBookingPdf);
   router.get("/api/bookings/:id/export-txt", exportBookingTxt.exportBookingTxt);
@@ -43,7 +48,6 @@ let initWebRoutes = (app) => {
   router.get("/api/get-dashboard", dashboardController.handleGetDashboard);
 
   // Auth API
-  router.post("/api/register", authController.handleRegister);
   router.post("/api/login", authController.handleLogin);
 
   return app.use("/", router);
