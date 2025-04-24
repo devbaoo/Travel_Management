@@ -18,39 +18,9 @@ const generateToken = (user) => {
     id: user.id,
     email: user.email,
     fullName: user.fullName,
+    role: user.role,
   };
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-};
-
-const register = async (data) => {
-  try {
-    if (!data.email || !data.password) {
-      return { errCode: 4, errMessage: "Email and password are required" };
-    }
-
-    const existingUser = await db.Seller.findOne({
-      where: { email: data.email },
-    });
-    if (existingUser) return { errCode: 1, errMessage: "Email already exists" };
-
-    const hashedPassword = await hashPassword(data.password);
-    const newSeller = await db.Seller.create({
-      ...data,
-      password: hashedPassword,
-    });
-
-    return {
-      errCode: 0,
-      data: {
-        id: newSeller.id,
-        fullName: newSeller.fullName,
-        email: newSeller.email,
-      },
-    };
-  } catch (error) {
-    console.error("Register error:", error);
-    return { errCode: 2, errMessage: "Server Error" };
-  }
 };
 
 const login = async ({ email, password }) => {
@@ -72,6 +42,7 @@ const login = async ({ email, password }) => {
           id: seller.id,
           fullName: seller.fullName,
           email: seller.email,
+          role: seller.role,
         },
       },
     };
@@ -81,4 +52,4 @@ const login = async ({ email, password }) => {
   }
 };
 
-export default { register, login };
+export default { login };

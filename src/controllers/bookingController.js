@@ -66,6 +66,18 @@ let deleteBooking = async (req, res) => {
     });
   }
 };
+let getBookingBySeller = async (req, res) => {
+  try {
+    let response = await bookingService.getBookingBySeller(req.params.sellerId);
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({
+      errCode: -1,
+      message: "Internal Server Error",
+    });
+  }
+};
 
 export default {
   createBooking,
@@ -73,4 +85,5 @@ export default {
   getBookingById,
   updateBooking,
   deleteBooking,
+  getBookingBySeller,
 };
