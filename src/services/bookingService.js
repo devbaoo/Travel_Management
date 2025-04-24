@@ -18,7 +18,13 @@ let createBooking = async (data) => {
 let getAllBookings = async () => {
   try {
     let bookings = await db.Booking.findAll({
-      include: [{ model: db.Seller, as: "seller" }],
+      include: [
+        {
+          model: db.Seller,
+          as: "seller",
+          required: true,
+        },
+      ],
       order: [["createdAt", "DESC"]],
     });
 
