@@ -1,46 +1,69 @@
 import db from "../models/index";
 import { uploadImage } from "./imageService";
+import bcrypt from "bcryptjs";
 
-let createSeller = async (data, file) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      if (!data.fullName || !data.phoneNumber || !data.email || !file) {
-        resolve({
-          errCode: 1,
-          errMessage: "Missing required fields",
-        });
-        return;
-      }
+const SALT_ROUNDS = 10;
 
-      let qrCodeUrl = null;
-      if (file) {
-        try {
-          qrCodeUrl = await uploadImage(file);
-        } catch (error) {
-          console.error("Error uploading QR:", error);
-          resolve({
-            errCode: 2,
-            errMessage: "Error uploading QR code",
-          });
-          return;
-        }
-      }
+const hashPassword = (password) => bcrypt.hash(password, SALT_ROUNDS);
 
-      await db.Seller.create({
-        fullName: data.fullName,
-        phoneNumber: data.phoneNumber,
-        email: data.email || null,
-        qrCodeUrl: qrCodeUrl,
-      });
+const createSeller = async (data, file) => {
+  try {
+    const { fullName, phoneNumber, email, password } = data;
 
-      resolve({
-        errCode: 0,
-        errMessage: "Seller created successfully",
-      });
-    } catch (e) {
-      reject(e);
+    if (!fullName || !phoneNumber || !email || !password || !file) {
+      return {
+        errCode: 1,
+        errMessage: "Missing required fields",
+      };
     }
-  });
+
+    const existingSeller = await db.Seller.findOne({ where: { email } });
+    if (existingSeller) {
+      return {
+        errCode: 2,
+        errMessage: "Email already exists",
+      };
+    }
+
+    let qrCodeUrl;
+    try {
+      qrCodeUrl = await uploadImage(file);
+    } catch (error) {
+      console.error("QR upload error:", error);
+      return {
+        errCode: 3,
+        errMessage: "Failed to upload QR code",
+      };
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const newSeller = await db.Seller.create({
+      fullName,
+      phoneNumber,
+      email,
+      password: hashedPassword,
+      qrCodeUrl,
+    });
+
+    return {
+      errCode: 0,
+      errMessage: "Seller created successfully",
+      data: {
+        id: newSeller.id,
+        fullName: newSeller.fullName,
+        email: newSeller.email,
+        phoneNumber: newSeller.phoneNumber,
+        qrCodeUrl: newSeller.qrCodeUrl,
+      },
+    };
+  } catch (error) {
+    console.error("Create seller error:", error);
+    return {
+      errCode: 500,
+      errMessage: "Internal server error",
+    };
+  }
 };
 
 let getAllSellers = async () => {
