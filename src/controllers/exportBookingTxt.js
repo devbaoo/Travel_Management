@@ -27,24 +27,19 @@ const exportBookingTxt = async (req, res) => {
 
     const seller = booking.seller;
 
-    // Tạo nội dung file txt
+    // Tạo nội dung file txt với icons
     const content = `
-=== THÔNG TIN KHÁCH HÀNG ===
-Họ tên: ${booking.customerName}
-SĐT: ${booking.phoneNumber}
-Dịch vụ: ${booking.serviceRequest}
-Số khách: ${booking.guestCount}
-Số phòng: ${booking.roomCount}
-Hạng phòng: ${booking.roomClass}
-Ngày nhận phòng: ${formatVNDate(booking.checkInDate)}
-Ngày trả phòng: ${formatVNDate(booking.checkOutDate)}
-Ghi chú: ${booking.note || "-"}
-Thành tiền: ${formatCurrency(booking.price)}
-
-=== NGƯỜI BÁN ===
-Họ tên: ${seller.fullName}
-SĐT: ${seller.phoneNumber}
-Email: ${seller.email || "-"}
+=== 🏨 THÔNG TIN KHÁCH HÀNG ===
+👤 Họ tên: ${booking.customerName}
+📞 SĐT: ${booking.phoneNumber}
+🛎 Dịch vụ: ${booking.serviceRequest}
+👥 Số khách: ${booking.guestCount}
+🛏 Số phòng: ${booking.roomCount}
+🏷 Hạng phòng: ${booking.roomClass}
+📅 Ngày nhận phòng: ${formatVNDate(booking.checkInDate)}
+📅 Ngày trả phòng: ${formatVNDate(booking.checkOutDate)}
+📝 Ghi chú: ${booking.note || "-"}
+💰 Thành tiền: ${formatCurrency(booking.price)}
 `.trim();
 
     // Set headers & trả về file

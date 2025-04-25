@@ -65,21 +65,26 @@ const exportBookingPdf = async (req, res) => {
     const usableW = doc.page.width - leftX - doc.page.margins.right;
     const rightX = leftX + usableW / 2 + 20;
 
-    // 1) Header: Logo & Seller
+    // 1) Header: Logo & Seller (Updated with new company info, moved further up)
     const logoPath = path.join(__dirname, "../assets/logo.png");
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, leftX, 35, { fit: [180, 80] });
     }
-    // Seller info: all lines same font size
+    // Updated company info, moved up further to 20
     doc
       .font("Bold")
       .fontSize(12)
       .fillColor("#FFF")
-      .text(`Người bán: ${booking.seller.fullName}`, rightX, 50)
+      .text("Công ty TNHH Thương Mại Thành Phát Global", rightX, 20) // Moved up to 20
       .font("Regular")
       .fontSize(12)
-      .text(`Email: ${booking.seller.email || "-"}`, rightX, doc.y + 4)
-      .text(`Số điện thoại: ${booking.seller.phoneNumber}`, rightX, doc.y + 2);
+      .text(
+        "Add: Ô 19 + 20, Lô 8, Đường Phan Đăng Lưu, Hồng Hải, TP Hạ Long, Quảng Ninh",
+        rightX,
+        doc.y + 4
+      )
+      .text("Hotline: 0979.754.556", rightX, doc.y + 2)
+      .text("Email: info@thanhphatglobal.com", rightX, doc.y + 2);
 
     // Divider dưới header
     doc
@@ -89,30 +94,36 @@ const exportBookingPdf = async (req, res) => {
       .lineWidth(0.5)
       .stroke();
 
-    // 2) Title: "Thông tin đặt phòng"
+    // 2) Title: "Xác nhận dịch vụ" - center aligned, single line
     const titleY = 140;
     doc
       .font("Bold")
       .fontSize(32)
       .fillColor(goldPrimary)
-      .text("Xác nhận", leftX, titleY)
-      .text("dịch vụ", leftX + 130, titleY + 40)
-      .fillColor("#FFF");
+      .text("Xác nhận dịch vụ", leftX, titleY, {
+        width: usableW,
+        align: "center",
+      });
 
-    // Company & Customer
+    // 2.1) Company & Customer info - moved below title, also centered
     doc
       .font("Bold")
       .fontSize(18)
       .fillColor(goldPrimary)
-      .text("Thành Phát Global", rightX, titleY)
       .font("Regular")
-      .fontSize(12)
+      .fontSize(13)
       .fillColor("#FFF")
-      .text(`Khách hàng: ${booking.customerName}`, rightX, doc.y + 6)
-      .text(`Số điện thoại khách: ${booking.phoneNumber}`, rightX, doc.y + 4);
+      .text(`Khách hàng: ${booking.customerName}`, leftX, doc.y + 6, {
+        width: usableW,
+        align: "center",
+      })
+      .text(`Số điện thoại: ${booking.phoneNumber}`, leftX, doc.y + 2, {
+        width: usableW,
+        align: "center",
+      });
 
     // 3) Details list (except price)
-    const detailsStartY = 270;
+    const detailsStartY = 240;
     const rowHeight = 32;
     const detailsWidth = usableW;
     const labelWidth = 140;
@@ -141,26 +152,49 @@ const exportBookingPdf = async (req, res) => {
 
     // Draw table lines and content
     details.forEach(([label, val]) => {
+      const labelTextHeight = doc.heightOfString(label, {
+        width: labelWidth - 16,
+        align: "left",
+        font: "Bold",
+        fontSize: 12,
+      });
+
+      const valueTextHeight = doc.heightOfString(val.toString(), {
+        width: valueWidth - 16,
+        align: "left",
+        font: "Regular",
+        fontSize: 12,
+      });
+
+      // Lấy chiều cao lớn hơn giữa nhãn và giá trị, thêm padding
+      const contentHeight = Math.max(labelTextHeight, valueTextHeight) + 10;
+
       // vertical line
       doc
         .strokeColor("#FFF")
         .lineWidth(0.5)
         .moveTo(leftX + labelWidth, currentY)
-        .lineTo(leftX + labelWidth, currentY + rowHeight)
+        .lineTo(leftX + labelWidth, currentY + contentHeight)
         .stroke();
+
       // horizontal bottom line
       doc
         .strokeColor("#FFF")
         .lineWidth(0.5)
-        .moveTo(leftX, currentY + rowHeight)
-        .lineTo(leftX + detailsWidth, currentY + rowHeight)
+        .moveTo(leftX, currentY + contentHeight)
+        .lineTo(leftX + detailsWidth, currentY + contentHeight)
         .stroke();
 
+      // Text label
       doc
         .font("Bold")
         .fontSize(12)
         .fillColor("#FFF")
-        .text(label, leftX + 8, currentY + 6);
+        .text(label, leftX + 8, currentY + 6, {
+          width: labelWidth - 16,
+        });
+
+      // Text value
       doc
         .font("Regular")
         .fontSize(12)
@@ -168,7 +202,8 @@ const exportBookingPdf = async (req, res) => {
         .text(val, leftX + labelWidth + 8, currentY + 6, {
           width: valueWidth - 16,
         });
-      currentY += rowHeight;
+
+      currentY += contentHeight;
     });
 
     // 4) "Thành tiền"
@@ -199,7 +234,7 @@ const exportBookingPdf = async (req, res) => {
     currentY = priceBottomY + 10;
 
     // Kích thước và vị trí container
-    const containerHeight = 220;
+    const containerHeight = 240;
     const containerWidth = usableW;
     const containerX = leftX;
     const containerY = currentY;
@@ -239,8 +274,7 @@ const exportBookingPdf = async (req, res) => {
       doc.restore();
 
       // "Xin cảm ơn!" canh phải, giữa theo chiều cao container
-      const thankMsg =
-        "Chân thành cảm ơn quý khách\nđã tin tưởng và sử dụng dịch vụ!";
+      const thankMsg = "Thank you and Best regards!";
       doc
         .font("Script")
         .fontSize(26)
