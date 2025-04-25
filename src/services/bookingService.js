@@ -2,15 +2,20 @@ import db from "../models/index";
 
 let createBooking = async (data) => {
   try {
-    if (!data.customerName || !data.checkInDate || !data.checkOutDate) {
+    const { customerName, checkInDate, checkOutDate, originalPrice } = data;
+
+    if (!customerName || !checkInDate || !checkOutDate || !originalPrice) {
       return { errCode: 1, errMessage: "Missing required fields" };
     }
 
-    await db.Booking.create(data);
+    await db.Booking.create({
+      ...data,
+      originalPrice, // Thêm originalPrice khi tạo booking
+    });
 
     return { errCode: 0, errMessage: "Create booking successfully" };
   } catch (error) {
-    console.error("Create error:", error);
+    console.error("Create booking error:", error);
     throw error;
   }
 };
@@ -71,6 +76,7 @@ let deleteBooking = async (id) => {
     throw error;
   }
 };
+
 let getBookingBySeller = async (sellerId) => {
   try {
     if (!sellerId) {

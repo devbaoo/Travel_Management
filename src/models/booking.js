@@ -37,6 +37,10 @@ module.exports = (sequelize, DataTypes) => {
       price: {
         type: DataTypes.DECIMAL(18, 2),
       },
+      originalPrice: {
+        type: DataTypes.DECIMAL(18, 2),
+        allowNull: true, // hoặc false nếu bắt buộc
+      },
       note: {
         type: DataTypes.TEXT,
       },
