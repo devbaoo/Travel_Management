@@ -46,6 +46,10 @@ let initWebRoutes = (app) => {
 
   // Dashboard API
   router.get("/api/get-dashboard", dashboardController.handleGetDashboard);
+  router.get(
+    "/api/get-seller-dashboard/:sellerId",
+    dashboardController.handleGetSellerDashboard
+  );
 
   // Auth API
   router.post("/api/login", authController.handleLogin);
