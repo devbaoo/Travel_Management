@@ -41,41 +41,6 @@ let getDashboardData = async () => {
       nest: true,
     });
 
-    // // Tính lợi nhuận cho từng seller và sắp xếp theo lợi nhuận giảm dần
-    // const topSellers = await db.Booking.findAll({
-    //   attributes: [
-    //     "sellerId",
-    //     [db.sequelize.fn("SUM", db.sequelize.col("price")), "totalRevenue"],
-    //     [
-    //       db.sequelize.fn("SUM", db.sequelize.col("originalPrice")),
-    //       "totalOriginalPrice",
-    //     ],
-    //     [
-    //       db.sequelize.fn("SUM", db.sequelize.col("price")) -
-    //         db.sequelize.fn("SUM", db.sequelize.col("originalPrice")),
-    //       "profit",
-    //     ],
-    //   ],
-    //   group: ["sellerId"], // Nhóm theo sellerId
-    //   order: [
-    //     [
-    //       db.sequelize.fn("SUM", db.sequelize.col("price")) -
-    //         db.sequelize.fn("SUM", db.sequelize.col("originalPrice")),
-    //       "DESC",
-    //     ], // Sắp xếp theo lợi nhuận (profit)
-    //   ],
-    //   limit: 5, // Lấy top 5 seller có lợi nhuận cao nhất
-    //   include: [
-    //     {
-    //       model: db.Seller,
-    //       as: "seller",
-    //       attributes: ["fullName"], // Lấy tên của seller
-    //     },
-    //   ],
-    //   raw: true, // Đảm bảo nhận kết quả là raw
-    //   nest: true, // Cho phép kết quả có cấu trúc nested
-    // });
-
     return {
       errCode: 0,
       data: {
@@ -152,7 +117,63 @@ let getSellerDashboardData = async (sellerId) => {
   }
 };
 
+let getRevenueBySellerByMonth = async (month, year) => {
+  try {
+    if (!month || !year) {
+      return { errCode: 1, errMessage: "Missing month or year" };
+    }
+
+    const startDate = moment
+      .utc(`${year}-${month}-01`)
+      .startOf("month")
+      .toDate();
+    const endDate = moment.utc(startDate).endOf("month").toDate();
+
+    const sellers = await db.Seller.findAll({
+      attributes: ["id", "fullName"],
+      raw: true,
+    });
+
+    const sellerStats = await Promise.all(
+      sellers.map(async (seller) => {
+        const totalRevenue = await db.Booking.sum("price", {
+          where: {
+            sellerId: seller.id,
+            createdAt: { [Op.between]: [startDate, endDate] },
+          },
+        });
+
+        const totalOriginalPrice = await db.Booking.sum("originalPrice", {
+          where: {
+            sellerId: seller.id,
+            createdAt: { [Op.between]: [startDate, endDate] },
+          },
+        });
+
+        const profit = (totalRevenue || 0) - (totalOriginalPrice || 0);
+
+        return {
+          sellerId: seller.id,
+          sellerName: seller.fullName,
+          totalRevenue: totalRevenue || 0,
+          totalOriginalPrice: totalOriginalPrice || 0,
+          profit,
+        };
+      })
+    );
+
+    // Sort by profit descending
+    sellerStats.sort((a, b) => b.profit - a.profit);
+
+    return { errCode: 0, data: sellerStats };
+  } catch (error) {
+    console.error("Get revenue by seller by month error:", error);
+    return { errCode: 1, errMessage: "Server Error" };
+  }
+};
+
 export default {
   getDashboardData,
   getSellerDashboardData,
+  getRevenueBySellerByMonth,
 };
