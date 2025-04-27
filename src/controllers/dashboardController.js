@@ -23,8 +23,26 @@ let handleGetSellerDashboard = async (req, res) => {
       .json({ errCode: -1, errMessage: "Internal server error" });
   }
 };
+const getRevenueBySellerByMonth = async (req, res) => {
+  try {
+    const { month, year } = req.query;
+
+    const result = await dashboardService.getRevenueBySellerByMonth(
+      month,
+      year
+    );
+    if (result.errCode !== 0) {
+      return res.status(400).json({ message: result.errMessage });
+    }
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Revenue by Seller by Month API Error:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
 export default {
   handleGetDashboard,
   handleGetSellerDashboard,
+  getRevenueBySellerByMonth,
 };

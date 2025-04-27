@@ -50,6 +50,10 @@ let initWebRoutes = (app) => {
     "/api/get-seller-dashboard/:sellerId",
     dashboardController.handleGetSellerDashboard
   );
+  router.get(
+    "/api/get-revenue-by-seller",
+    dashboardController.getRevenueBySellerByMonth
+  );
 
   // Auth API
   router.post("/api/login", authController.handleLogin);
