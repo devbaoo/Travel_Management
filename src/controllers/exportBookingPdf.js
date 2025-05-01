@@ -59,6 +59,14 @@ const exportBookingPdf = async (req, res) => {
     doc.registerFont("Script", scriptFont);
     doc.registerFont("Regular", regular);
     doc.registerFont("Bold", bold);
+    doc.registerFont(
+      "Body",
+      path.join(__dirname, "../fonts/OpenSans-Regular.ttf")
+    );
+    doc.registerFont(
+      "Header",
+      path.join(__dirname, "../fonts/Montserrat-Bold.ttf")
+    );
 
     // Layout variables
     const leftX = doc.page.margins.left;
@@ -72,11 +80,11 @@ const exportBookingPdf = async (req, res) => {
     }
     // Updated company info, moved up further to 20
     doc
-      .font("Bold")
+      .font("Header")
       .fontSize(12)
       .fillColor("#FFF")
       .text("Công ty TNHH Thương Mại Thành Phát Global", rightX, 20) // Moved up to 20
-      .font("Regular")
+      .font("Body")
       .fontSize(12)
       .text(
         "Add: Ô 19 + 20, Lô 8, Đường Phan Đăng Lưu, Hồng Hải, TP Hạ Long, Quảng Ninh",
@@ -97,7 +105,7 @@ const exportBookingPdf = async (req, res) => {
     // 2) Title: "Xác nhận dịch vụ" - center aligned, single line
     const titleY = 140;
     doc
-      .font("Bold")
+      .font("Header")
       .fontSize(32)
       .fillColor(goldPrimary)
       .text("Xác nhận dịch vụ", leftX, titleY, {
@@ -107,12 +115,16 @@ const exportBookingPdf = async (req, res) => {
 
     // 2.1) Company & Customer info - moved below title, also centered
     doc
-      .font("Bold")
+      .font("Body")
       .fontSize(18)
       .fillColor(goldPrimary)
       .font("Regular")
       .fontSize(13)
       .fillColor("#FFF")
+      .text(`Mã đặt phòng: #00${booking.id}`, leftX, doc.y + 4, {
+        width: usableW,
+        align: "center",
+      })
       .text(`Khách hàng: ${booking.customerName}`, leftX, doc.y + 6, {
         width: usableW,
         align: "center",
@@ -141,7 +153,7 @@ const exportBookingPdf = async (req, res) => {
     // Table header
     let currentY = detailsStartY;
     doc
-      .font("Bold")
+      .font("Header")
       .fontSize(18)
       .fillColor(goldPrimary)
       .text("Chi tiết dịch vụ", leftX, currentY, {
@@ -187,7 +199,7 @@ const exportBookingPdf = async (req, res) => {
 
       // Text label
       doc
-        .font("Bold")
+        .font("Body")
         .fontSize(12)
         .fillColor("#FFF")
         .text(label, leftX + 8, currentY + 6, {
@@ -196,7 +208,7 @@ const exportBookingPdf = async (req, res) => {
 
       // Text value
       doc
-        .font("Regular")
+        .font("Body")
         .fontSize(12)
         .fillColor("#FFF")
         .text(val, leftX + labelWidth + 8, currentY + 6, {
