@@ -17,7 +17,7 @@ const corsOptions = {
     "http://localhost:5173",
     "https://travel-management-fe.vercel.app",
   ],
-  methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
+  methods: ["GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
