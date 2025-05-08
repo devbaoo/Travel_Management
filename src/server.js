@@ -16,6 +16,7 @@ const corsOptions = {
     "http://localhost:5000",
     "http://localhost:5173",
     "https://travel-management-fe.vercel.app",
+    "https://thanhphatglobal.devbaoo.works",
   ],
   methods: ["GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
