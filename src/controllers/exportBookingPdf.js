@@ -137,10 +137,10 @@ const exportBookingPdf = async (req, res, next) => {
       .font("Regular")
       .fontSize(13)
       .fillColor("#FFF")
-      .text(`Mã đặt phòng: #00${booking.id}`, leftX, doc.y + 4, {
-        width: usableW,
-        align: "center",
-      })
+      // .text(`Mã đặt phòng: #00${booking.id}`, leftX, doc.y + 4, {
+      //   width: usableW,
+      //   align: "center",
+      // })
       .text(`Khách hàng: ${booking.customerName}`, leftX, doc.y + 6, {
         width: usableW,
         align: "center",
