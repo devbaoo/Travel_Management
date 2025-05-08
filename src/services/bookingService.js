@@ -55,9 +55,14 @@ let getBookingById = async (id) => {
 
 let updateBooking = async (id, data) => {
   try {
-    const [updated] = await db.Booking.update(data, { where: { id } });
+    // Kiểm tra xem booking có tồn tại không
+    const booking = await db.Booking.findByPk(id);
 
-    if (!updated) return { errCode: 1, errMessage: "Booking not found" };
+    if (!booking) {
+      return { errCode: 1, errMessage: "Booking not found" };
+    }
+
+    await db.Booking.update(data, { where: { id } });
 
     return { errCode: 0, errMessage: "Update booking successfully" };
   } catch (error) {
