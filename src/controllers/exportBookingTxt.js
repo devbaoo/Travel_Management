@@ -17,48 +17,40 @@ const exportBookingTxt = async (req, res) => {
 
     const formatVNDate = (dateInput) => {
       try {
+        // Kiểm tra null/undefined trước khi xử lý
+        if (!dateInput) {
+          return "-";
+        }
+
         // Truy cập trực tiếp dữ liệu thô từ Sequelize
         let dateStr;
 
         // Kiểm tra nếu dateInput là đối tượng Sequelize có dataValues
-        if (dateInput && dateInput.dataValues) {
+        if (
+          dateInput &&
+          typeof dateInput === "object" &&
+          "dataValues" in dateInput
+        ) {
           dateStr = dateInput.dataValues;
         } else {
           // Trích xuất ngày tháng từ chuỗi ISO
-          dateStr = dateInput.toString();
+          dateStr = String(dateInput);
         }
 
-        // Trích xuất ngày, tháng, năm từ chuỗi ngày
-        // Hỗ trợ nhiều định dạng ngày tháng có thể có
-        let year, month, day;
-
-        if (dateStr.includes("-")) {
-          // Format: 2025-05-29 hoặc 2025-05-29T00:00:00.000Z
-          const dateParts = dateStr.split("T")[0].split("-");
-          year = parseInt(dateParts[0], 10);
-          month = parseInt(dateParts[1], 10);
-          day = parseInt(dateParts[2], 10);
-        } else if (dateStr.includes("/")) {
-          // Format: 29/05/2025
-          const dateParts = dateStr.split("/");
-          day = parseInt(dateParts[0], 10);
-          month = parseInt(dateParts[1], 10);
-          year = parseInt(dateParts[2], 10);
-        } else {
-          // Fallback: sử dụng Date constructor
-          const dateObj = new Date(dateStr);
-          year = dateObj.getFullYear();
-          month = dateObj.getMonth() + 1; // getMonth() trả về 0-11
-          day = dateObj.getDate();
+        // Kiểm tra chuỗi ngày có hợp lệ không
+        if (!dateStr) {
+          return "-";
         }
 
-        // Tạo đối tượng Date mới, sử dụng giá trị UTC để tránh chênh lệch múi giờ
-        const dateObj = new Date(Date.UTC(year, month - 1, day));
+        // Tạo date object và đặt giờ là 12 để tránh vấn đề với múi giờ
+        const dateObj = new Date(dateStr);
+        // Để chắc chắn không bị chênh lệch ngày do múi giờ
+        dateObj.setHours(12, 0, 0, 0);
 
         return format(dateObj, "EEEE, dd/MM/yyyy", { locale: vi });
       } catch (error) {
         console.error("Date formatting error:", error);
-        return dateInput ? dateInput.toString() : "-";
+        return "-";
       }
     };
 

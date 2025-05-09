@@ -47,36 +47,10 @@ const exportBookingPdf = async (req, res, next) => {
     // Helpers
     const formatDate = (dateInput) => {
       try {
-        let dateStr;
-
-        if (dateInput && dateInput.dataValues) {
-          dateStr = dateInput.dataValues;
-        } else {
-          dateStr = dateInput.toString();
-        }
-
-        let year, month, day;
-
-        if (dateStr.includes("-")) {
-          const dateParts = dateStr.split("T")[0].split("-");
-          year = parseInt(dateParts[0], 10);
-          month = parseInt(dateParts[1], 10);
-          day = parseInt(dateParts[2], 10);
-        } else if (dateStr.includes("/")) {
-          const dateParts = dateStr.split("/");
-          day = parseInt(dateParts[0], 10);
-          month = parseInt(dateParts[1], 10);
-          year = parseInt(dateParts[2], 10);
-        } else {
-          const dateObj = new Date(dateStr);
-          year = dateObj.getFullYear();
-          month = dateObj.getMonth() + 1;
-          day = dateObj.getDate();
-        }
-
-        const date = new Date(year, month - 1, day); // local time
+        const date = new Date(dateInput);
 
         return new Intl.DateTimeFormat("vi-VN", {
+          timeZone: "Asia/Ho_Chi_Minh", // 👉 fix múi giờ cho đúng
           weekday: "long",
           day: "2-digit",
           month: "2-digit",
@@ -221,7 +195,8 @@ const exportBookingPdf = async (req, res, next) => {
 
     details.forEach(([label, val]) => {
       // Đảm bảo val không phải null/undefined trước khi gọi toString
-      const valStr = val !== null && val !== undefined ? val.toString() : "-";
+      const valStr = val !== null && val !== undefined ? String(val) : "-";
+
       const labelTextHeight = doc.heightOfString(label, {
         width: labelWidth - 16,
         align: "left",
