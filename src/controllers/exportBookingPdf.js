@@ -10,16 +10,43 @@ const os = require("os");
 /**
  * Export booking as styled booking info PDF
  */
-const exportBookingPdf = async (req, res) => {
+const exportBookingPdf = async (req, res, next) => {
+  let booking;
   try {
+    // 1) Lấy booking & seller trước
     const bookingId = req.params.id;
-    const booking = await db.Booking.findByPk(bookingId, {
+    booking = await db.Booking.findByPk(bookingId, {
       include: [{ model: db.Seller, as: "seller" }],
     });
     if (!booking || !booking.seller) {
       return res.status(404).json({ message: "Booking or Seller not found" });
     }
+  } catch (err) {
+    console.error("DB error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 
+  // 2) Chỉ khi đã có booking, mới setup PDF
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename=booking_${booking.id}.pdf`
+  );
+  const doc = new PDFDocument({ margin: 50 });
+
+  // Bắt lỗi từ PDFDocument
+  doc.on("error", (err) => {
+    console.error("PDF generation error:", err);
+    if (!res.headersSent) {
+      res.status(500).send("Error generating PDF");
+    }
+    doc.destroy();
+  });
+
+  // Pipe PDF stream vào HTTP response
+  doc.pipe(res);
+
+  try {
     // Helpers
     const formatDate = (dateInput) => {
       try {
@@ -45,15 +72,6 @@ const exportBookingPdf = async (req, res) => {
         minimumFractionDigits: 0,
       }).format(amount);
 
-    // PDF setup
-    const doc = new PDFDocument({ margin: 50 });
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=booking_${bookingId}.pdf`
-    );
-    doc.pipe(res);
-
     // Colors (match logo)
     const bgDark = "#2E2E2E"; // deep grey background
     const goldPrimary = "#D4AF37"; // metallic gold
@@ -61,7 +79,6 @@ const exportBookingPdf = async (req, res) => {
 
     // Draw full-page background
     doc.rect(0, 0, doc.page.width, doc.page.height).fill(bgDark);
-    // Default text color on dark bg
     doc.fillColor("#FFF");
 
     // Load fonts
@@ -85,17 +102,17 @@ const exportBookingPdf = async (req, res) => {
     const usableW = doc.page.width - leftX - doc.page.margins.right;
     const rightX = leftX + usableW / 2 + 20;
 
-    // 1) Header: Logo & Seller (Updated with new company info, moved further up)
+    // 1) Header: Logo & Seller info
     const logoPath = path.join(__dirname, "../assets/logo.png");
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, leftX, 35, { fit: [180, 80] });
     }
-    // Updated company info, moved up further to 20
     doc
       .font("Header")
       .fontSize(12)
       .fillColor("#FFF")
       .text("CÔNG TY TNHH THƯƠNG MẠI THÀNH PHÁT GLOBAL", rightX, 20) // Moved up to 20
+
       .font("Body")
       .fontSize(12)
       .text(
@@ -114,7 +131,7 @@ const exportBookingPdf = async (req, res) => {
       .lineWidth(0.5)
       .stroke();
 
-    // 2) Title: "Xác nhận dịch vụ" - center aligned, single line
+    // 2) Title
     const titleY = 140;
     doc
       .font("Header")
@@ -180,7 +197,6 @@ const exportBookingPdf = async (req, res) => {
       });
     currentY += rowHeight + 12;
 
-    // Draw table lines and content
     details.forEach(([label, val]) => {
       // Đảm bảo val không phải null/undefined trước khi gọi toString
       const valStr = val !== null && val !== undefined ? String(val) : "-";
@@ -193,27 +209,21 @@ const exportBookingPdf = async (req, res) => {
       });
 
       const valueTextHeight = doc.heightOfString(valStr, {
+
         width: valueWidth - 16,
         align: "left",
         font: "Regular",
         fontSize: 12,
       });
-
-      // Lấy chiều cao lớn hơn giữa nhãn và giá trị, thêm padding
       const contentHeight = Math.max(labelTextHeight, valueTextHeight) + 10;
 
-      // vertical line
+      // Vertical & horizontal lines
       doc
         .strokeColor("#FFF")
         .lineWidth(0.5)
         .moveTo(leftX + labelWidth, currentY)
         .lineTo(leftX + labelWidth, currentY + contentHeight)
-        .stroke();
-
-      // horizontal bottom line
-      doc
-        .strokeColor("#FFF")
-        .lineWidth(0.5)
+        .stroke()
         .moveTo(leftX, currentY + contentHeight)
         .lineTo(leftX + detailsWidth, currentY + contentHeight)
         .stroke();
@@ -233,13 +243,14 @@ const exportBookingPdf = async (req, res) => {
         .fontSize(12)
         .fillColor("#FFF")
         .text(valStr, leftX + labelWidth + 8, currentY + 6, {
+
           width: valueWidth - 16,
         });
 
       currentY += contentHeight;
     });
 
-    // 4) "Thành tiền"
+    // 4) Thành tiền
     doc
       .strokeColor("#FFF")
       .lineWidth(0.5)
@@ -262,11 +273,9 @@ const exportBookingPdf = async (req, res) => {
       .moveTo(leftX, priceBottomY)
       .lineTo(leftX + detailsWidth, priceBottomY)
       .stroke();
-
-    // 5) Bank QR & "Xin cảm ơn!"
     currentY = priceBottomY + 10;
 
-    // Kích thước và vị trí container
+    // 5) Bank QR & "Xin cảm ơn!"
     const containerHeight = 240;
     const containerWidth = usableW;
     const containerX = leftX;
@@ -335,12 +344,12 @@ const exportBookingPdf = async (req, res) => {
           width: thankWidth,
         });
     }
-
-    // End PDF
+    // Kết thúc PDF
     doc.end();
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: "Internal server error" });
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    if (!doc._writableEnded) doc.destroy();
+    next(err);
   }
 };
 
