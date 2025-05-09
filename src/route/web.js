@@ -42,6 +42,10 @@ let initWebRoutes = (app) => {
 
   // Export API
   router.get("/api/bookings/:id/export", exportBookingPdf.exportBookingPdf);
+  router.get(
+    "/api/bookings/:id/export-image",
+    exportBookingPdf.exportBookingImage
+  );
   router.get("/api/bookings/:id/export-txt", exportBookingTxt.exportBookingTxt);
 
   // Dashboard API
