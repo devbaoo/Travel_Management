@@ -18,7 +18,7 @@ const corsOptions = {
     "https://travel-management-fe.vercel.app",
     "https://thanhphatglobal.devbaoo.works",
   ],
-  methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
+  methods: ["GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };

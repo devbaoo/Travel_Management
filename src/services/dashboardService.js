@@ -1,6 +1,9 @@
 import db from "../models";
-import moment from "moment";
+import moment from "moment-timezone"; // <-- đổi import
 import { Op } from "sequelize";
+
+// Thiết timezone mặc định
+moment.tz.setDefault("Asia/Ho_Chi_Minh");
 
 let getDashboardData = async () => {
   try {
@@ -16,6 +19,7 @@ let getDashboardData = async () => {
     // Tính lợi nhuận (doanh thu - giá nhập)
     const profit = totalRevenue - totalOriginalPrice;
 
+    // Dùng giờ Việt Nam để tính 7 ngày gần nhất
     const startDate = moment().subtract(6, "days").startOf("day").toDate();
     const endDate = moment().endOf("day").toDate();
 
@@ -50,7 +54,6 @@ let getDashboardData = async () => {
         profit,
         bookingsByDay,
         bookingsBySeller,
-        // topSellers, // Top 5 sellers đạt nhiều lợi nhuận nhất
       },
     };
   } catch (err) {
@@ -61,33 +64,21 @@ let getDashboardData = async () => {
 
 let getSellerDashboardData = async (sellerId) => {
   try {
-    // Kiểm tra nếu sellerId không hợp lệ
     if (!sellerId) {
       return { errCode: 1, errMessage: "Missing sellerId" };
     }
 
-    // Tổng số booking cho seller này
-    const totalBookings = await db.Booking.count({
-      where: { sellerId },
-    });
-
-    // Tổng doanh thu (price) cho seller này
-    const totalRevenue = await db.Booking.sum("price", {
-      where: { sellerId },
-    });
-
-    // Tổng giá nhập (originalPrice) cho seller này
+    const totalBookings = await db.Booking.count({ where: { sellerId } });
+    const totalRevenue = await db.Booking.sum("price", { where: { sellerId } });
     const totalOriginalPrice = await db.Booking.sum("originalPrice", {
       where: { sellerId },
     });
-
-    // Tính lợi nhuận (doanh thu - giá nhập)
     const profit = totalRevenue - totalOriginalPrice;
 
+    // Dùng giờ Việt Nam để tính 7 ngày gần nhất
     const startDate = moment().subtract(6, "days").startOf("day").toDate();
     const endDate = moment().endOf("day").toDate();
 
-    // Booking theo ngày cho seller này
     const bookingsByDay = await db.Booking.findAll({
       attributes: [
         [db.sequelize.fn("DATE", db.sequelize.col("checkInDate")), "date"],
@@ -119,15 +110,22 @@ let getSellerDashboardData = async (sellerId) => {
 
 let getRevenueBySellerByMonth = async (month, year) => {
   try {
-    if (!month || !year) {
-      return { errCode: 1, errMessage: "Missing month or year" };
+    // parse inputs
+    const m = parseInt(month, 10);
+    const y = parseInt(year, 10);
+    if (isNaN(m) || isNaN(y) || m < 1 || m > 12) {
+      return { errCode: 1, errMessage: "Missing or invalid month or year" };
     }
 
+    // Dùng giờ Việt Nam để xác định đầu/tháng
     const startDate = moment
-      .utc(`${year}-${month}-01`)
+      .tz({ year: y, month: m - 1, day: 1 }, "Asia/Ho_Chi_Minh")
       .startOf("month")
       .toDate();
-    const endDate = moment.utc(startDate).endOf("month").toDate();
+    const endDate = moment
+      .tz({ year: y, month: m - 1, day: 1 }, "Asia/Ho_Chi_Minh")
+      .endOf("month")
+      .toDate();
 
     const sellers = await db.Seller.findAll({
       attributes: ["id", "fullName"],
