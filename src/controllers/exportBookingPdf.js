@@ -18,13 +18,57 @@ const exportBookingPdf = async (req, res) => {
     }
 
     // Helpers
-    const formatDate = (dateInput) =>
-      new Intl.DateTimeFormat("vi-VN", {
-        weekday: "long",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }).format(new Date(dateInput));
+    const formatDate = (dateInput) => {
+      try {
+        // Truy cập trực tiếp dữ liệu thô từ Sequelize
+        let dateStr;
+
+        // Kiểm tra nếu dateInput là đối tượng Sequelize có dataValues
+        if (dateInput && dateInput.dataValues) {
+          dateStr = dateInput.dataValues;
+        } else {
+          // Trích xuất ngày tháng từ chuỗi ISO
+          dateStr = dateInput.toString();
+        }
+
+        // Trích xuất ngày, tháng, năm từ chuỗi ngày
+        // Hỗ trợ nhiều định dạng ngày tháng có thể có
+        let year, month, day;
+
+        if (dateStr.includes("-")) {
+          // Format: 2025-05-29 hoặc 2025-05-29T00:00:00.000Z
+          const dateParts = dateStr.split("T")[0].split("-");
+          year = parseInt(dateParts[0], 10);
+          month = parseInt(dateParts[1], 10);
+          day = parseInt(dateParts[2], 10);
+        } else if (dateStr.includes("/")) {
+          // Format: 29/05/2025
+          const dateParts = dateStr.split("/");
+          day = parseInt(dateParts[0], 10);
+          month = parseInt(dateParts[1], 10);
+          year = parseInt(dateParts[2], 10);
+        } else {
+          // Fallback: sử dụng Date constructor
+          const dateObj = new Date(dateStr);
+          year = dateObj.getFullYear();
+          month = dateObj.getMonth() + 1; // getMonth() trả về 0-11
+          day = dateObj.getDate();
+        }
+
+        // Tạo đối tượng Date mới, sử dụng giá trị UTC để tránh chênh lệch múi giờ
+        const date = new Date(Date.UTC(year, month - 1, day));
+
+        return new Intl.DateTimeFormat("vi-VN", {
+          weekday: "long",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }).format(date);
+      } catch (error) {
+        console.error("Date formatting error:", error);
+        return dateInput ? dateInput.toString() : "-";
+      }
+    };
 
     const formatVND = (amount) =>
       new Intl.NumberFormat("vi-VN", {
@@ -141,12 +185,18 @@ const exportBookingPdf = async (req, res) => {
     const labelWidth = 140;
     const valueWidth = detailsWidth - labelWidth;
     const details = [
-      ["Dịch vụ", booking.serviceRequest],
-      ["Số khách", booking.guestCount],
-      ["Số phòng", booking.roomCount],
-      ["Hạng phòng", booking.roomClass],
-      ["Ngày nhận phòng", formatDate(booking.checkInDate)],
-      ["Ngày trả phòng", formatDate(booking.checkOutDate)],
+      ["Dịch vụ", booking.serviceRequest || "-"],
+      ["Số khách", booking.guestCount || "-"],
+      ["Số phòng", booking.roomCount || "-"],
+      ["Hạng phòng", booking.roomClass || "-"],
+      [
+        "Ngày nhận phòng",
+        booking.checkInDate ? formatDate(booking.checkInDate) : "-",
+      ],
+      [
+        "Ngày trả phòng",
+        booking.checkOutDate ? formatDate(booking.checkOutDate) : "-",
+      ],
       ["Ghi chú", booking.note || "-"],
     ];
 
@@ -164,6 +214,9 @@ const exportBookingPdf = async (req, res) => {
 
     // Draw table lines and content
     details.forEach(([label, val]) => {
+      // Đảm bảo val không phải null/undefined trước khi gọi toString
+      const valStr = val !== null && val !== undefined ? val.toString() : "-";
+
       const labelTextHeight = doc.heightOfString(label, {
         width: labelWidth - 16,
         align: "left",
@@ -171,7 +224,7 @@ const exportBookingPdf = async (req, res) => {
         fontSize: 12,
       });
 
-      const valueTextHeight = doc.heightOfString(val.toString(), {
+      const valueTextHeight = doc.heightOfString(valStr, {
         width: valueWidth - 16,
         align: "left",
         font: "Regular",
@@ -211,7 +264,7 @@ const exportBookingPdf = async (req, res) => {
         .font("Body")
         .fontSize(12)
         .fillColor("#FFF")
-        .text(val, leftX + labelWidth + 8, currentY + 6, {
+        .text(valStr, leftX + labelWidth + 8, currentY + 6, {
           width: valueWidth - 16,
         });
 
