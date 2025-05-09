@@ -8,7 +8,16 @@ const hashPassword = (password) => bcrypt.hash(password, SALT_ROUNDS);
 
 const createSeller = async (data, file) => {
   try {
-    const { fullName, phoneNumber, email, password, role = "staff" } = data;
+    const {
+      fullName,
+      phoneNumber,
+      email,
+      password,
+      bank,
+      bankAccountName,
+      bankAccountNumber,
+      role = "staff",
+    } = data;
 
     if (!fullName || !phoneNumber || !email || !password) {
       return {
@@ -42,7 +51,6 @@ const createSeller = async (data, file) => {
 
     // Mã hóa password
     const hashedPassword = await hashPassword(password);
-
     // Tạo mới seller
     const newSeller = await db.Seller.create({
       fullName,
@@ -51,6 +59,9 @@ const createSeller = async (data, file) => {
       password: hashedPassword,
       qrCodeUrl,
       role,
+      bank,
+      bankAccountName,
+      bankAccountNumber,
     });
 
     return {
@@ -63,6 +74,9 @@ const createSeller = async (data, file) => {
         phoneNumber: newSeller.phoneNumber,
         qrCodeUrl: newSeller.qrCodeUrl,
         role: newSeller.role,
+        bank: newSeller.bank,
+        bankAccountName: newSeller.bankAccountName,
+        bankAccountNumber: newSeller.bankAccountNumber,
       },
     };
   } catch (error) {
@@ -183,6 +197,9 @@ let updateSeller = async (id, data, file) => {
           phoneNumber: data.phoneNumber,
           email: data.email || null,
           qrCodeUrl: qrCodeUrl,
+          bank: data.bank,
+          bankAccountName: data.bankAccountName,
+          bankAccountNumber: data.bankAccountNumber,
         },
         { where: { id: id } }
       );

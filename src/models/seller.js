@@ -28,6 +28,19 @@ module.exports = (sequelize, DataTypes) => {
       qrCodeUrl: {
         type: DataTypes.STRING(255),
       },
+      bank: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+      bankAccountName: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+      bankAccountNumber: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+
       role: {
         type: DataTypes.ENUM("admin", "staff"), // hoặc: "admin", "staff", "manager"
         allowNull: false,
