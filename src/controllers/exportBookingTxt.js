@@ -17,40 +17,18 @@ const exportBookingTxt = async (req, res) => {
 
     const formatVNDate = (dateInput) => {
       try {
-        // Kiểm tra null/undefined trước khi xử lý
-        if (!dateInput) {
-          return "-";
-        }
+        const date = new Date(dateInput);
 
-        // Truy cập trực tiếp dữ liệu thô từ Sequelize
-        let dateStr;
-
-        // Kiểm tra nếu dateInput là đối tượng Sequelize có dataValues
-        if (
-          dateInput &&
-          typeof dateInput === "object" &&
-          "dataValues" in dateInput
-        ) {
-          dateStr = dateInput.dataValues;
-        } else {
-          // Trích xuất ngày tháng từ chuỗi ISO
-          dateStr = String(dateInput);
-        }
-
-        // Kiểm tra chuỗi ngày có hợp lệ không
-        if (!dateStr) {
-          return "-";
-        }
-
-        // Tạo date object và đặt giờ là 12 để tránh vấn đề với múi giờ
-        const dateObj = new Date(dateStr);
-        // Để chắc chắn không bị chênh lệch ngày do múi giờ
-        dateObj.setHours(12, 0, 0, 0);
-
-        return format(dateObj, "EEEE, dd/MM/yyyy", { locale: vi });
+        return new Intl.DateTimeFormat("vi-VN", {
+          timeZone: "Asia/Ho_Chi_Minh", // 👉 fix múi giờ cho đúng
+          weekday: "long",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }).format(date);
       } catch (error) {
         console.error("Date formatting error:", error);
-        return "-";
+        return dateInput ? dateInput.toString() : "-";
       }
     };
 
