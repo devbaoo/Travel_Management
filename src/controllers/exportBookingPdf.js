@@ -47,43 +47,34 @@ const exportBookingPdf = async (req, res, next) => {
     // Helpers
     const formatDate = (dateInput) => {
       try {
-        // Truy cập trực tiếp dữ liệu thô từ Sequelize
         let dateStr;
 
-        // Kiểm tra nếu dateInput là đối tượng Sequelize có dataValues
         if (dateInput && dateInput.dataValues) {
           dateStr = dateInput.dataValues;
         } else {
-          // Trích xuất ngày tháng từ chuỗi ISO
           dateStr = dateInput.toString();
         }
 
-        // Trích xuất ngày, tháng, năm từ chuỗi ngày
-        // Hỗ trợ nhiều định dạng ngày tháng có thể có
         let year, month, day;
 
         if (dateStr.includes("-")) {
-          // Format: 2025-05-29 hoặc 2025-05-29T00:00:00.000Z
           const dateParts = dateStr.split("T")[0].split("-");
           year = parseInt(dateParts[0], 10);
           month = parseInt(dateParts[1], 10);
           day = parseInt(dateParts[2], 10);
         } else if (dateStr.includes("/")) {
-          // Format: 29/05/2025
           const dateParts = dateStr.split("/");
           day = parseInt(dateParts[0], 10);
           month = parseInt(dateParts[1], 10);
           year = parseInt(dateParts[2], 10);
         } else {
-          // Fallback: sử dụng Date constructor
           const dateObj = new Date(dateStr);
           year = dateObj.getFullYear();
-          month = dateObj.getMonth() + 1; // getMonth() trả về 0-11
+          month = dateObj.getMonth() + 1;
           day = dateObj.getDate();
         }
 
-        // Tạo đối tượng Date mới, sử dụng giá trị UTC để tránh chênh lệch múi giờ
-        const date = new Date(Date.UTC(year, month - 1, day));
+        const date = new Date(year, month - 1, day); // local time
 
         return new Intl.DateTimeFormat("vi-VN", {
           weekday: "long",
